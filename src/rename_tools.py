@@ -16,6 +16,7 @@ class colors:
     RED = '\033[31m'
     PURPLE = '\033[35m'
     BOLD = '\033[1m'
+    ULINE = '\033[4m'
     ENDC = '\033[0m'
 
 
@@ -46,9 +47,9 @@ def replace_all(filename, dic):
     return filename
 
 
-def sanitize_and_rename(file_list, src_dir, dic={}, rename=False):
+def sanitize(file_list, src_dir, dic={}, rename=False):
     """
-    TODO: Why is sanitize its own function?
+    TODO: 
     """
     sanitized_list = list([])
 
@@ -104,15 +105,6 @@ def regex_group_split(file_list, pattern, output=True):
 
     for file in file_list:
         split_file = list(re.match(pattern, file).groups())
-        #pattern = ('(PLC_PM_Report_)(.*)(\w{3,4})(-| )(\d{4})(.*)')
-        #split_file[0], split_file[1], split_file[2], split_file[3], split_file[4] = \
-        #    split_file[0], split_file[1] + "-0", split_file[2] + "-", split_file[3], split_file[4]
-        #split_file[0], split_file[1], split_file[2], split_file[3], split_file[4] = \
-        #     split_file[0],'20'+split_file[3] + '-0', split_file[1] + '-', split_file[2], split_file[4]
-             #split_file[0],''+split_file[3] + '-', replace_all(split_file[2], dicdic) + '-', split_file[1], split_file[4]
-        #split_file[0], split_file[1], split_file[2] = split_file[0],"_",split_file[2]
-        #split_file[0], split_file[1], split_file[2], split_file[3], split_file[4] = \
-        #    split_file[0], split_file[3] + '-0', split_file[1] + "-", split_file[2], split_file[4]
         #split_list.append(file.replace(" ", ""))
         split_file[0], split_file[1], split_file[2], split_file[3], split_file[4], split_file[5] = \
         split_file[0] + " ", split_file[1], split_file[2] + "-", split_file[3]+ "-", split_file[4], split_file[5]

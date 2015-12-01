@@ -6,11 +6,16 @@ files.
 import rename_tools as rt
 import os
 import argparse
+import sys
+import subprocess
 from glob import glob
 
 ####################################################################################################
 # ----------------------------------- (MODULE-)GLOBAL VARIABLES ---------------------------------- #
 ####################################################################################################
+
+root = "/Users/kault/Box Sync/CIN Study (RGS001D)/"
+working_dir = os.path.join(root, "Data Management")
 
 # Completed directories to exclude/ignore
 complete = ['.DS_Store', 'Clinical Sites']
@@ -36,8 +41,7 @@ def main():
     Executive function to handle all output and renaming functionality by interpreting
     arguments.
     """
-    root = "/Users/kault/Box Sync/CIN Study (RGS001D)/"
-    working_dir = os.path.join(root, "Data Management")
+    
     print "Working directory: " + working_dir
     #print next(os.walk(working_dir))[1]
 
@@ -52,18 +56,20 @@ def main():
     # Check arguments from required group...
     if args.bedrock:
         full_paths, parent_paths, filenames = bedrock(working_dir, output=False)
+        #print '\n'.join(filenames)
     elif args.dirs:
-        full_paths, parent_paths, filenames = dirs(working_dir, output=False)
+        full_paths, parent_paths, filenames = dirs(working_dir, output=True)
+        #print '\n'.join(filenames)
     elif args.drilldown:
-        # drilldown( , ,)
-        print "unimplemented"
-    elif args.list:
-        # TODO: finish this
-        print '\n'.join(os.listdir(working_dir))
+        #print '@@@@' + str(args.drilldown)
+        drilldown(working_dir, args.drilldown, output=True)
 
     # ... then check optional arguments
-    if args.sanitize:
-        rt.sanitize_and_rename(filenames, working_dir, my_dict)
+    if args.list:
+        #print '\n'.join([file for file in os.listdir(working_dir) if file not in complete])
+        pass
+    elif args.sanitize:
+        rt.sanitize(filenames, working_dir, my_dict, False)
     elif args.filter:
         rt.regex_filter_list(filenames, pattern, output=True)
     elif args.check:
@@ -107,7 +113,8 @@ def dirs(src_dir, output=True, limit=100):
     result_dirs = [x[0] for x in os.walk(src_dir)]
 
     if output:
-        print rt.colors.PURPLE + rt.colors.BOLD + "# # # " + src_dir.upper() + " # # #" + rt.colors.ENDC
+        print rt.colors.PURPLE + rt.colors.BOLD + "# # # " + \
+            src_dir.upper() + " # # #" + rt.colors.ENDC
         result_dirs.pop(0)
         print '\n'.join([os.path.split(dir)[1] for dir in result_dirs])
         #for dir in result_dirs:
@@ -129,17 +136,86 @@ def dirs(src_dir, output=True, limit=100):
     return result_dirs, heads, tails
 
 
-def drilldown(src_dir, drill_count, output=True):
+def drilldown(src_dir, drill_count, output=True, tabs=0):
     """
     Recurses a specified number of times and returns a list of files.
     """
-    files = []
+    result_files = []
+    result_dirs = []
 
-    while (drill_count > 0):
-        print "meow"
-        drill_count -= 1
+    if drill_count == 0:
+        return result_files, result_dirs
+    else:
+        # Print name of src_dir (aka rootpath below)
+        # if tabs != 0:
+        global working_dir
+        if (working_dir == src_dir):
+            print (rt.colors.PURPLE + rt.colors.ULINE + rt.colors.BOLD + \
+                os.path.split(src_dir)[1] + " " + rt.colors.ENDC).expandtabs(4)
+        else:
+            print (rt.colors.PURPLE+ "|" + rt.colors.ULINE + ("\t"* (tabs)) + rt.colors.BOLD +\
+                os.path.split(src_dir)[1] + " " + rt.colors.ENDC).expandtabs(4)
 
-    return 0
+        # Find all local files (non-directories) directly in src_dir and add them to result_files
+        local_list = os.listdir(src_dir)
+
+        local_files = [os.path.join(src_dir,f) for f in local_list if os.path.isfile(os.path.join(src_dir, f))]
+        local_dirs = [os.path.join(src_dir,d) for d in local_list if os.path.isdir(os.path.join(src_dir, d))]
+
+        result_files += local_files
+        result_dirs += local_dirs
+
+        # Print non-directory files in src_dir
+        if len(local_files) + len(local_dirs) == 0:
+            print (rt.colors.RED + "|" + ('\t' * tabs) + "|" + (u"" + unichr(746)).encode(sys.stdout.encoding) + " EMPTY " + rt.colors.ENDC).expandtabs(4)
+
+        #
+        if not (len(local_files) == 0):
+            mew = local_files[-1:]
+            for rfile in local_files:
+                #if (rfile == mew[0]):
+                print (rt.colors.PURPLE + "|" + ('\t' * tabs) + "|" +\
+                 (u"" + unichr(746)).encode(sys.stdout.encoding) + " " + rt.colors.ENDC + os.path.split(rfile)[1]).expandtabs(4)
+
+        # Create iterator, then os.walk src_dir and drilldown into each subdir (drill_count-1, tabs+1)
+        # walk_iter = os.walk(src_dir)
+        # for rootpath, subdirs, subfiles in walk_iter:
+        #     for sd in subdirs:
+        #         print ('\t' * tabs) + "SD: " + sd            
+        #         dril_files, dril_dirs = drilldown(os.path.join(rootpath,sd), int(drill_count) - 1, output, tabs + 1)
+        #         result_files += dril_files
+
+        for rd in result_dirs:
+            #print rt.colors.PURPLE + (get_terminal_width()/4 * (u" " + unichr(1154)).encode(sys.stdout.encoding)) + rt.colors.ENDC
+            #print os.path.join(src_dir,rd)
+            dril_files, dril_dirs = drilldown(os.path.join(src_dir,rd), int(drill_count) - 1, output, tabs + 1)
+            result_files += [f for f in dril_files if f not in result_files]
+            result_dirs += [d for d in dril_dirs if d not in result_dirs]
+
+
+    if tabs == 0:
+        print "\n# of files: " + str(len(result_files))
+        print "# of dirs:  " + str(len(result_dirs))
+
+    return result_files,result_dirs
+
+
+def get_terminal_width():
+    """
+    mrermwek
+    """   
+    command = ['tput', 'cols']
+
+    try:
+        width = int(subprocess.check_output(command))
+    except OSError as e:
+        print("Invalid Command '{0}': exit status ({1})".format(
+              command[0], e.errno))
+    except subprocess.CalledProcessError as e:
+        print("Command '{0}' returned non-zero exit status: ({1})".format(
+              command, e.returncode))
+    else:
+        return width
 
 
 def empty(src_dir, output=True):
@@ -167,32 +243,25 @@ def op_parser():
 
     # Instantiate groups of mutually exclusive options and add main arguments
     main_args = parser.add_mutually_exclusive_group(required=True)
-    main_args.add_argument( '-l', '--list', action='store_true',
-                        help="List files in directory.")
-
     main_args.add_argument( '-b', '--bedrock', action='store_true',
                         help="Lists all filenames in directory (recursive).")
-
     main_args.add_argument( '-d', '--dirs', action='store_true',
                         help="Lists all subdirectories in directory (recursive).")
-
-    main_args.add_argument('-dril', '--drilldown',
+    main_args.add_argument('-dril', '--drilldown', 
                         help="Specify subdirectory.")
 
     # Add subparser cmd_parser (called w/ "eval") and add argument 
     cmd_parser = sp.add_parser('eval')
+    cmd_parser.add_argument( '-l', '--list', action='store_true',
+                        help="List files in directory.")
     cmd_parser.add_argument( '-f', '--filter', action='store_true',
                         help="Filter list according to pattern regex.")
-
     cmd_parser.add_argument( '-s', '--sanitize', action='store_true',
                         help="Sanitizes according to k-v dictionary.")
-
     cmd_parser.add_argument( '-c', '--check', action='store_true',
                         help="Check renaming of files before proceeding.")
-
     cmd_parser.add_argument( '-e', '--empty', action='store_true',
                         help="List all empty files.")
-
     cmd_parser.add_argument( '-rn', '--rename', action='store_true',
                         help="Rename files (it is recommended to run -c first!).")
 
