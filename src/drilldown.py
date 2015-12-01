@@ -71,8 +71,8 @@ def main():
         rt.regex_group_split(rt.regex_filter_list(filenames, pattern), pattern)
     elif args.rename:
         rt.rename_files(rt.regex_filter_list(filenames, pattern), working_dir, pattern)
-
-        #empty(root, True)
+    elif args.empty:
+        empty(root, True)
 
 
 def bedrock(src_dir, output=True):
@@ -96,12 +96,6 @@ def bedrock(src_dir, output=True):
         heads.append(hd + "/")
         tails.append(tl)
     assert len(heads) == len(tails)
-
-    # for parent_dir, file in zip(heads, tails):
-    #     # rt.sanitize_and_rename([file], parent_dir, my_dict, False)
-    #     rt.regex_filter_list([file], pattern, output=True)
-    #     # rt.regex_group_split(rt.regex_filter_list([file], pattern), pattern)
-    #     # rt.rename_files(rt.regex_filter_list([file], pattern, False), parent_dir, pattern, True)
 
     return result_files, heads, tails
 
@@ -172,11 +166,8 @@ def op_parser():
     parser = argparse.ArgumentParser(prog="bedrock") #prog = 'bedrock'
     sp = parser.add_subparsers(dest="cmd")
 
-    # Instantiate groups of mutually exclusive options.
+    # Instantiate groups of mutually exclusive options and add main arguments
     main_args = parser.add_mutually_exclusive_group(required=True)
-    # sub_args = parser.add_mutually_exclusive_group()
-
-    # Add main arguments to the parser.
     main_args.add_argument( '-l', '--list', action='store_true',
                         help="List files in directory.")
 
@@ -189,9 +180,8 @@ def op_parser():
     main_args.add_argument('-dril', '--drilldown',
                         help="Specify subdirectory.")
 
-    # Some shit
+    # Add subparser cmd_parser (called w/ "eval") and add argument 
     cmd_parser = sp.add_parser('eval')
-    # Add arguments to subparser
     cmd_parser.add_argument( '-f', '--filter', action='store_true',
                         help="Filter list according to pattern regex.")
 
@@ -200,6 +190,9 @@ def op_parser():
 
     cmd_parser.add_argument( '-c', '--check', action='store_true',
                         help="Check renaming of files before proceeding.")
+
+    cmd_parser.add_argument( '-e', '--empty', action='store_true',
+                        help="List all empty files.")
 
     cmd_parser.add_argument( '-rn', '--rename', action='store_true',
                         help="Rename files (it is recommended to run -c first!).")
