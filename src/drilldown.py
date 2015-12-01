@@ -6,7 +6,6 @@ files.
 import rename_tools as rt
 import os
 import argparse
-import op_parser
 from glob import glob
 
 ####################################################################################################
@@ -37,8 +36,8 @@ def main():
     Executive function to handle all output and renaming functionality by interpreting
     arguments.
     """
-    root = "/Users/kault/Box Sync/CIN Study (RGS001D)/Clinical Sites"
-    working_dir = os.path.join(root, "*/IRB")
+    root = "/Users/kault/Box Sync/CIN Study (RGS001D)/"
+    working_dir = os.path.join(root, "Data Management")
     print "Working directory: " + working_dir
     #print next(os.walk(working_dir))[1]
 

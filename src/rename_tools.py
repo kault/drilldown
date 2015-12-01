@@ -46,19 +46,6 @@ def replace_all(filename, dic):
     return filename
 
 
-def sanitize(file_list, dic={}):
-    """
-    Calls replace_all on a list of filename strings and returns the sanitized list.
-    """
-    sanitized_list = list([])
-
-    for file in file_list:
-        file = replace_all(file, dic)
-        sanitized_list.append(file)
-
-    return sanitized_list
-
-
 def sanitize_and_rename(file_list, src_dir, dic={}, rename=False):
     """
     TODO: Why is sanitize its own function?
